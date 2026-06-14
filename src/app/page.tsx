@@ -1,5 +1,5 @@
 import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { LayoutDashboard, Sparkles } from "lucide-react";
 import dbConnect from "@/lib/mongoose";
@@ -10,8 +10,9 @@ export default async function Home() {
   await dbConnect();
   
   const products = await Product.find({ is_active: true }).sort({ createdAt: -1 });
-  const { userId } = await auth();
-
+  const user = await currentUser();
+  const userId = user?.id;
+  const isAdmin = user?.emailAddresses[0]?.emailAddress === process.env.ADMIN_EMAIL;
   return (
     <div className="min-h-screen text-white selection:bg-emerald-500/30">
       <header className="border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
@@ -26,6 +27,11 @@ export default async function Home() {
           <div className="flex items-center gap-6">
             {userId ? (
               <>
+                {isAdmin && (
+                  <Link href="/admin" className="text-sm font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-2 transition-colors border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 rounded-lg">
+                    Admin
+                  </Link>
+                )}
                 <Link href="/dashboard" className="text-sm font-semibold text-gray-300 hover:text-white flex items-center gap-2 transition-colors">
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard
